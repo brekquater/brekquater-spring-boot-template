@@ -29,7 +29,7 @@ The sample API:
 | `POST /notes` | Adds a note |
 | `DELETE /notes/{id}` | Deletes a note |
 
-Errors are RFC 9457 problem details (`application/problem+json`).
+Input is validated with Bean Validation (`@Valid`, `@NotBlank`, `@Min`, `@Max`), and every error, including Spring's own, is an RFC 9457 problem detail (`application/problem+json`).
 
 ## Build and test
 

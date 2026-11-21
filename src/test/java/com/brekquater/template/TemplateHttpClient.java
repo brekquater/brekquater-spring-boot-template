@@ -41,8 +41,8 @@ final class TemplateHttpClient {
         return send(HttpRequest.newBuilder(uri(path)).DELETE().build());
     }
 
-    JsonNode assessment() {
-        return JSON.readTree(get("/brekquater/api/assessment").body());
+    static JsonNode json(HttpResponse<String> response) {
+        return JSON.readTree(response.body());
     }
 
     private URI uri(String path) {

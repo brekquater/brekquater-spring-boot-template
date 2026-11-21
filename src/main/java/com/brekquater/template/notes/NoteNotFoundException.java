@@ -8,7 +8,7 @@ public class NoteNotFoundException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    public NoteNotFoundException(String id) {
+    public NoteNotFoundException(long id) {
         super("Note " + id + " does not exist.");
     }
 }

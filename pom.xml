@@ -34,11 +34,15 @@
   </properties>
 
   <dependencies>
-    <!-- One dependency: Spring MVC, springdoc-openapi with Swagger UI, and the API maturity panel. -->
+    <!-- Brings Spring MVC, springdoc-openapi with Swagger UI, and the API maturity panel. -->
     <dependency>
       <groupId>com.brekquater</groupId>
       <artifactId>brekquater-api-spring-boot-starter</artifactId>
       <version>${brekquater-api-starter.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>

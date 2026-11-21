@@ -10,6 +10,9 @@ import org.junit.jupiter.api.Test;
 
 class NoteControllerTest {
 
+    private static final long WELCOME_NOTE = 1;
+    private static final long NO_SUCH_NOTE = 42;
+
     private final NoteController controller = new NoteController(new NoteStore());
 
     @Test
@@ -21,35 +24,28 @@ class NoteControllerTest {
     void numbersNotesInTheOrderTheyAreAdded() {
         Note second = controller.addNote(new NoteController.NewNote("Second", "Text"));
 
-        assertThat(second.id()).isEqualTo("2");
-        assertThat(controller.listNotes(0, 20)).extracting(Note::id).containsExactly("1", "2");
+        assertThat(second.id()).isEqualTo(2);
+        assertThat(controller.listNotes(0, 20)).extracting(Note::id).containsExactly(1L, 2L);
     }
 
     @Test
-    void returnsTheRequestedPageOnly() {
+    void returnsOnlyTheRequestedPage() {
         controller.addNote(new NoteController.NewNote("Second", "Text"));
 
         assertThat(controller.listNotes(1, 1)).extracting(Note::title).containsExactly("Second");
     }
 
     @Test
-    void refusesAnEmptyOrOversizedPage() {
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> controller.listNotes(0, 0));
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> controller.listNotes(-1, 10));
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> controller.listNotes(0, 101));
-    }
-
-    @Test
-    void findsAndDeletesANote() {
-        controller.deleteNote("1");
+    void forgetsADeletedNote() {
+        controller.deleteNote(WELCOME_NOTE);
 
         assertThatExceptionOfType(NoteNotFoundException.class)
-                .isThrownBy(() -> controller.findNote("1"))
+                .isThrownBy(() -> controller.findNote(WELCOME_NOTE))
                 .withMessage("Note 1 does not exist.");
     }
 
     @Test
     void refusesToDeleteANoteThatDoesNotExist() {
-        assertThatExceptionOfType(NoteNotFoundException.class).isThrownBy(() -> controller.deleteNote("42"));
+        assertThatExceptionOfType(NoteNotFoundException.class).isThrownBy(() -> controller.deleteNote(NO_SUCH_NOTE));
     }
 }

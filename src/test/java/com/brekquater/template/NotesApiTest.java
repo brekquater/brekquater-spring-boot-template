@@ -19,13 +19,14 @@ class NotesApiTest {
     private static final int NO_CONTENT = 204;
     private static final int BAD_REQUEST = 400;
     private static final int NOT_FOUND = 404;
+    private static final String PROBLEM_JSON = "application/problem+json";
 
     @LocalServerPort
     private int port;
 
     @Test
     void listsTheWelcomeNote() {
-        HttpResponse<String> response = new TemplateHttpClient(port).get("/notes");
+        HttpResponse<String> response = http().get("/notes");
 
         assertThat(response.statusCode()).isEqualTo(OK);
         assertThat(response.body()).contains("Welcome");
@@ -33,11 +34,11 @@ class NotesApiTest {
 
     @Test
     void addsFindsAndDeletesANote() {
-        TemplateHttpClient http = new TemplateHttpClient(port);
+        TemplateHttpClient http = http();
 
         HttpResponse<String> created = http.post("/notes", "{\"title\":\"Groceries\",\"content\":\"Milk\"}");
         assertThat(created.statusCode()).isEqualTo(CREATED);
-        String id = created.body().replaceAll(".*\"id\":\"(\\d+)\".*", "$1");
+        long id = TemplateHttpClient.json(created).get("id").asLong();
 
         assertThat(http.get("/notes/" + id).body()).contains("Groceries");
         assertThat(http.delete("/notes/" + id).statusCode()).isEqualTo(NO_CONTENT);
@@ -46,22 +47,47 @@ class NotesApiTest {
 
     @Test
     void reportsAMissingNoteAsAProblemDetail() {
-        HttpResponse<String> response = new TemplateHttpClient(port).get("/notes/999999");
+        HttpResponse<String> response = http().get("/notes/999999");
 
         assertThat(response.statusCode()).isEqualTo(NOT_FOUND);
-        assertThat(response.headers().firstValue("Content-Type")).hasValueSatisfying(
-                type -> assertThat(type).startsWith("application/problem+json"));
+        assertThat(contentTypeOf(response)).startsWith(PROBLEM_JSON);
+        assertThat(TemplateHttpClient.json(response).get("detail").asString()).isEqualTo("Note 999999 does not exist.");
+    }
+
+    @Test
+    void rejectsANoteWithABlankTitle() {
+        HttpResponse<String> response = http().post("/notes", "{\"title\":\" \",\"content\":\"Milk\"}");
+
+        assertThat(response.statusCode()).isEqualTo(BAD_REQUEST);
+        assertThat(contentTypeOf(response)).startsWith(PROBLEM_JSON);
     }
 
     @Test
     void rejectsAPageSizeThatIsTooLarge() {
-        HttpResponse<String> response = new TemplateHttpClient(port).get("/notes?size=1000");
+        HttpResponse<String> response = http().get("/notes?size=1000");
 
         assertThat(response.statusCode()).isEqualTo(BAD_REQUEST);
+        assertThat(contentTypeOf(response)).startsWith(PROBLEM_JSON);
+    }
+
+    @Test
+    void rejectsANoteNumberThatIsNotANumber() {
+        HttpResponse<String> response = http().get("/notes/abc");
+
+        assertThat(response.statusCode()).isEqualTo(BAD_REQUEST);
+        assertThat(contentTypeOf(response)).startsWith(PROBLEM_JSON);
     }
 
     @Test
     void servesSwaggerUi() {
-        assertThat(new TemplateHttpClient(port).get("/swagger-ui/index.html").statusCode()).isEqualTo(OK);
+        assertThat(http().get("/swagger-ui/index.html").statusCode()).isEqualTo(OK);
+    }
+
+    private TemplateHttpClient http() {
+        return new TemplateHttpClient(port);
+    }
+
+    private static String contentTypeOf(HttpResponse<String> response) {
+        return response.headers().firstValue("Content-Type").orElse("");
     }
 }

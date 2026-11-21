@@ -3,10 +3,9 @@
 
 package com.brekquater.template.notes;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.NavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.stereotype.Component;
 
@@ -17,38 +16,35 @@ import org.springframework.stereotype.Component;
 @Component
 class NoteStore {
 
-    private final Map<String, Note> notes = new ConcurrentHashMap<>();
-    private final AtomicLong lastNumber = new AtomicLong();
+    private final NavigableMap<Long, Note> notesById = new ConcurrentSkipListMap<>();
+    private final AtomicLong lastId = new AtomicLong();
 
     NoteStore() {
         add("Welcome", "Open Swagger UI and click API maturity to see how this API scores.");
     }
 
     Note add(String title, String content) {
-        Note note = new Note(String.valueOf(lastNumber.incrementAndGet()), title, content);
-        notes.put(note.id(), note);
+        Note note = new Note(lastId.incrementAndGet(), title, content);
+        notesById.put(note.id(), note);
         return note;
     }
 
-    Note get(String id) {
-        Note note = notes.get(id);
+    Note get(long id) {
+        Note note = notesById.get(id);
         if (note == null) {
             throw new NoteNotFoundException(id);
         }
         return note;
     }
 
-    void remove(String id) {
-        if (notes.remove(id) == null) {
+    void remove(long id) {
+        if (notesById.remove(id) == null) {
             throw new NoteNotFoundException(id);
         }
     }
 
-    List<Note> page(int page, int size) {
-        return notes.values().stream()
-                .sorted(Comparator.comparingLong(note -> Long.parseLong(note.id())))
-                .skip((long) page * size)
-                .limit(size)
-                .toList();
+    /** Returns the requested page of notes, oldest first. */
+    List<Note> page(int pageNumber, int pageSize) {
+        return notesById.values().stream().skip((long) pageNumber * pageSize).limit(pageSize).toList();
     }
 }

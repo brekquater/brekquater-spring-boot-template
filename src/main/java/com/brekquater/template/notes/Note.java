@@ -10,4 +10,4 @@ package com.brekquater.template.notes;
  * @param title a short heading
  * @param content the text of the note
  */
-public record Note(String id, String title, String content) {}
+public record Note(long id, String title, String content) {}
