@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright Brekquater
+
+spring:
+  application:
+    name: brekquater-spring-boot-template
+  profiles:
+    # The API maturity panel appears only in the "dev" and "local" profiles, so running locally shows it
+    # and a deployed service (with no profile, or "prod") does not.
+    default: dev
+
+# Uncomment to make the build fail when the API breaks a blocker rule, for example an unprotected operation.
+# brekquater:
+#   api:
+#     strict: true
